@@ -3,25 +3,63 @@ from gensim.models.fasttext import FastText
 import pandas as pd
 import pickle
 import os
+# Code to import libraries as you need in this assessment, e.g.,
+import pandas
+import os
+import re
+from collections import defaultdict
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn import metrics
+import fasttext
 
-def gen_docVecs(wv,tk_txts): # generate vector representation for documents
-    docs_vectors = pd.DataFrame() # creating empty final dataframe
-    #stopwords = nltk.corpus.stopwords.words('english') # if we haven't pre-processed the articles, it's a good idea to remove stop words
+def tokenize(line):
+    # re tokenize
+    results = re.findall(r'[a-zA-Z]+(?:[-\'][a-zA-Z]+)?',line)
+    data = []
+    for result in results:
+        # remove data = 1 and in stop_words
+        if(len(result)>1 and result not in stop_words):
+            data.append(result.lower())
+    return data
 
-    for i in range(0,len(tk_txts)):
-        tokens = tk_txts[i]
-        temp = pd.DataFrame()  # creating a temporary dataframe(store value for 1st doc & for 2nd doc remove the details of 1st & proced through 2nd and so on..)
-        for w_ind in range(0, len(tokens)): # looping through each word of a single document and spliting through space
-            try:
-                word = tokens[w_ind]
-                word_vec = wv[word] # if word is present in embeddings(goole provides weights associate with words(300)) then proceed
-                temp = temp.append(pd.Series(word_vec), ignore_index = True) # if word is present then append it to temporary dataframe
-            except:
-                pass
-        doc_vector = temp.sum() # take the sum of each column
-        docs_vectors = docs_vectors.append(doc_vector, ignore_index = True) # append each document value to the final dataframe
-    return docs_vectors
-
+def job_clf(descirption):
+    with open("vocab.txt",'r',encoding='utf8') as f:
+        contents = f.readlines()
+    word_num = {}
+    for content in contents:
+        content = content.strip().split(' ')
+        word_num[content[0]] = content[1]
+# code to perform the task...
+    with open("stopwords_en.txt",'r') as f:
+        stop_words = f.readlines()
+    desc=tokenize(descirption)
+    dataset_x = []
+    one_x = []
+    df = defaultdict(int)
+    for word in desc:
+# avoid the word not in vocabulary
+        try:
+            df[word_num[word]] +=1
+            one_x.append(word)
+        except:
+            pass
+    dataset_x.append(one_x)
+# load x
+    x = []
+    one = ''
+    for word in dataset_x[0]:
+        one = one + word + " "
+    x.append(one)
+    with open('job_model.pkl', 'rb') as f:
+        vector,lg_model = pickle.load(f)
+# get vector
+    test_x = vector.transform(x)
+    output=lg_model.predict(test_x)[0]
+    return output
+    
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16) 
@@ -48,29 +86,31 @@ def classify():
             # Read the content
             f_title = request.form['title']
             f_content = request.form['description']
-
+            
             # Tokenize the content of the .txt file so as to input to the saved model
             # Here, as an example,  we just do a very simple tokenization
-            tokenized_data = f_content.split(' ')
+            # tokenized_data = f_content.split(' ')
 
             # Load the FastText model
-            bbcFT = FastText.load("bbcFT.model")
-            bbcFT_wv= bbcFT.wv
+            # bbcFT = FastText.load("bbcFT.model")
+            
+            # bbcFT_wv= bbcFT.wv
 
             # Generate vector representation of the tokenized data
-            bbcFT_dvs = gen_docVecs(bbcFT_wv, [tokenized_data])
+            # bbcFT_dvs = gen_docVecs(bbcFT_wv, [tokenized_data])
 
             # Load the LR model
-            pkl_filename = "bbcFT_LR.pkl"
-            with open(pkl_filename, 'rb') as file:
-                model = pickle.load(file)
+            
+            # pkl_filename = "bbcFT_LR.pkl"
+            # with open(pkl_filename, 'rb') as file:
+            #     model = pickle.load(file)
 
-            # Predict the label of tokenized_data
-            y_pred = model.predict(bbcFT_dvs)
-            y_pred = y_pred[0]
+            # # Predict the label of tokenized_data
+            # y_pred = model.predict(bbcFT_dvs)
+            # y_pred = y_pred[0]
 
             # Set the predicted message
-            predicted_message = "The category of this news is {}.".format(y_pred)
+            predicted_message = "The category of this news is {}.".format(job_clf(f_content))
 
             return render_template('classify.html', predicted_message=predicted_message, title=f_title, description=f_content)
         else:
