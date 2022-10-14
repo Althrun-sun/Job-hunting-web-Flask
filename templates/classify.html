@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block links %}
+<a href="/logout">Logout</a>
+{% endblock %} 
+
+{% block body %}
+
+<form action = "/classify" method = "POST">
+    <p>Title:</p>
+    <p><input type = "text" name = "title" style="width:100%" value="{{ title }}" required/></p>
+    <p>Description:</p>
+    <textarea type="text" name="description" style="height:200px; width:100%" required> {{ description }} </textarea>
+    <p><input type = "submit" value = "Classify" /></p>
+    <p> {{ predicted_message }} </p>
+ </form> 
+
+{% endblock %}
+
+
+
+
