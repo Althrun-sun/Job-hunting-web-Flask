@@ -30,13 +30,14 @@
 <br></br>
 <div>
     {% for job in jobs %}
-    <li></li>
-    <p>{{job.title}}</p>
-    <dl>
-    <dt>Description:</dt>
-    <dd>{{job.description}}</dd>
-    <dd>----------------------------------</dd>
-    </dl>
+    <form >
+        <p>{{job.title}}</p>
+        <dl>
+        <a href="/preview">click here to see more detial description </a>
+        </dl>
+
+     </form> 
+
     {% endfor %}
 
 {% endblock %}

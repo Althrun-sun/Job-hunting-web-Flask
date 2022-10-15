@@ -9,10 +9,15 @@
 <form action = "/classify" method = "POST">
     <p>Title:</p>
     <p><input type = "text" name = "title" style="width:100%" value="{{ title }}" required/></p>
+    <p>Webindex:</p>
+    <p><input type = "text" name = "Webindex" style="width:100%" value="{{ Webindex }}" required/></p>
+    <p>Company: </p>
+    <p><input type = "text" name = "Company" style="width:100%" value="{{ Company }}" required/></p>
     <p>Description:</p>
     <textarea type="text" name="description" style="height:200px; width:100%" required> {{ description }} </textarea>
-    <p><input type = "submit" value = "Classify" /></p>
+    <p><input type = "submit" value = "Classify the type of job by the Machine learning algorithm" /></p>
     <p> {{ predicted_message }} </p>
+    <p><input type = "submit" value = "Confirmed and post" /></p>
  </form> 
 
 {% endblock %}

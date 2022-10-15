@@ -13,9 +13,7 @@ import re
 from collections import defaultdict
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score
-from sklearn import metrics
+
 
 def get_cls(path):
     contents=[]
@@ -83,9 +81,6 @@ if __name__ == '__main__':
     app.debug = True
     app.run()
 
-
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     account_path = 'static/data/Accounting_Finance'
@@ -117,7 +112,9 @@ def index():
 def about():
     return render_template('about.html')
 
-
+@app.route('/preview')
+def preview():
+    return render_template('preview.html')
 
 
 
@@ -169,6 +166,3 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html'), 500
-
-
-
