@@ -1,5 +1,8 @@
+from email.policy import default
+from importlib.resources import contents
 from flask import Flask, render_template, request, session, redirect
 from gensim.models.fasttext import FastText
+from numpy import choose
 import pandas as pd
 import pickle
 import os
@@ -13,9 +16,22 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
 from sklearn import metrics
-import fasttext
 
-def tokenize(line):
+def get_cls(path):
+    contents=[]
+    # read file from dir
+    for file_name in os.listdir(path):
+        df = {}
+        file_path = os.path.join(path,file_name)
+        with open(file_path,'r',encoding='utf8') as f:
+            data = f.readlines()
+            # restore data in dictionary
+            df["title"] = data[0][6:].strip()
+            df["description"] = data[-1][13:]
+            contents.append(df)
+    return contents
+
+def tokenize(line,stop_words):
     # re tokenize
     results = re.findall(r'[a-zA-Z]+(?:[-\'][a-zA-Z]+)?',line)
     data = []
@@ -35,7 +51,7 @@ def job_clf(descirption):
 # code to perform the task...
     with open("stopwords_en.txt",'r') as f:
         stop_words = f.readlines()
-    desc=tokenize(descirption)
+    desc=tokenize(descirption,stop_words)
     dataset_x = []
     one_x = []
     df = defaultdict(int)
@@ -63,19 +79,46 @@ def job_clf(descirption):
 
 app = Flask(__name__)
 app.secret_key = os.urandom(16) 
+if __name__ == '__main__':
+    app.debug = True
+    app.run()
 
-@app.route('/')
+
+
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('home.html', name='RMIT')
+    account_path = 'static/data/Accounting_Finance'
+    engineer_path = 'static/data/Engineering'
+    health_path = 'static/data/Healthcare_Nursing'
+    sales_path = 'static/data/Sales'
+    job_class=['Accounting_Finance','Engineering','Healthcare_Nursing','Sales']
+    job_path=[account_path,engineer_path,health_path,sales_path]
+    # hobby_list = request.from.getlist("hobby") # hobby_list = ["reading","other","dancing"
+    if request.method == 'POST':
+        choose_cls =request.form['hobby']
+        # app.logger.info(choose)
+        jobs=[]
+        if isinstance(choose_cls,str):
+            jobs=jobs+get_cls(job_path[job_class.index(choose_cls)])
+            return render_template('home.html',jobs=jobs,job_class=job_class)
+        else:
+            for item in choose_cls:
+                jobs=jobs+get_cls(job_path[job_class.index(item)])
+            return render_template('home.html',jobs=jobs,job_class=job_class)
+    else:
+        jobs=[]
+        for item in job_path:
+            jobs=jobs+get_cls(item)
+        return render_template('home.html',jobs=jobs,job_class=job_class)
+
 
 @app.route('/about')
 def about():
     return render_template('about.html')
 
-@app.route('/hello')
-def hello():
-    user = request.args.get('user', 'COSC2820')
-    return render_template('home.html', name=user)
+
+
 
 
 @app.route('/classify', methods=['GET', 'POST'])
@@ -83,35 +126,11 @@ def classify():
     if 'username' in session:
         if request.method == 'POST':
 
-            # Read the content
             f_title = request.form['title']
             f_content = request.form['description']
-            
-            # Tokenize the content of the .txt file so as to input to the saved model
-            # Here, as an example,  we just do a very simple tokenization
-            # tokenized_data = f_content.split(' ')
 
-            # Load the FastText model
-            # bbcFT = FastText.load("bbcFT.model")
-            
-            # bbcFT_wv= bbcFT.wv
-
-            # Generate vector representation of the tokenized data
-            # bbcFT_dvs = gen_docVecs(bbcFT_wv, [tokenized_data])
-
-            # Load the LR model
-            
-            # pkl_filename = "bbcFT_LR.pkl"
-            # with open(pkl_filename, 'rb') as file:
-            #     model = pickle.load(file)
-
-            # # Predict the label of tokenized_data
-            # y_pred = model.predict(bbcFT_dvs)
-            # y_pred = y_pred[0]
-
-            # Set the predicted message
             predicted_message = "The category of this news is {}.".format(job_clf(f_content))
-
+            app.logger.info(predicted_message)
             return render_template('classify.html', predicted_message=predicted_message, title=f_title, description=f_content)
         else:
             return render_template('classify.html')

@@ -5,9 +5,45 @@
 {% endblock %} 
 
 {% block body %}
-<h1>Hello {{ name }}!</h1>
+<h1>Welcome to job hunting website!</h1>
+<div>
+<p> Choose an Industry</p>
+
+<label class="checkbox-inline" >
+    
+    <form method="post" action="/">
+        <input type="checkbox" name="hobby" value="Accounting_Finance" >Accounting_Finance
+        <input type="checkbox" name="hobby" value="Engineering" >Engineering
+        <input type="checkbox" name="hobby" value="Healthcare_Nursing" >Healthcare_Nursing
+        <input type="checkbox" name="hobby" value="Sales" >Sales
+        <input type="submit" value="refresh">
+    </form>
+
+
+
+
+
+</label>
+
+
+
+<br></br>
+<div>
+    {% for job in jobs %}
+    <li></li>
+    <p>{{job.title}}</p>
+    <dl>
+    <dt>Description:</dt>
+    <dd>{{job.description}}</dd>
+    <dd>----------------------------------</dd>
+    </dl>
+    {% endfor %}
 
 {% endblock %}
+
+
+    
+
 
 
 
