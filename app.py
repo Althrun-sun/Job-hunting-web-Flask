@@ -6,6 +6,7 @@ from numpy import choose
 import pandas as pd
 import pickle
 import os
+import random
 # Code to import libraries as you need in this assessment, e.g.,
 import pandas
 import os
@@ -16,7 +17,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 
 def get_cls(path):
-    contents=[]
+    content_out=[]
     # read file from dir
     for file_name in os.listdir(path):
         df = {}
@@ -26,8 +27,8 @@ def get_cls(path):
             # restore data in dictionary
             df["title"] = data[0][6:].strip()
             df["description"] = data[-1][13:]
-            contents.append(df)
-    return contents
+            content_out.append(df)
+    return content_out
 
 def tokenize(line,stop_words):
     # re tokenize
@@ -52,11 +53,11 @@ def job_clf(descirption):
     desc=tokenize(descirption,stop_words)
     dataset_x = []
     one_x = []
-    df = defaultdict(int)
+    # df = defaultdict(int)
     for word in desc:
 # avoid the word not in vocabulary
         try:
-            df[word_num[word]] +=1
+            # df[word_num[word]] +=1
             one_x.append(word)
         except:
             pass
@@ -83,6 +84,7 @@ if __name__ == '__main__':
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    new_path='static/data/new'
     account_path = 'static/data/Accounting_Finance'
     engineer_path = 'static/data/Engineering'
     health_path = 'static/data/Healthcare_Nursing'
@@ -93,7 +95,7 @@ def index():
     if request.method == 'POST':
         choose_cls =request.form['hobby']
         # app.logger.info(choose)
-        jobs=[]
+        jobs=get_cls(new_path)
         if isinstance(choose_cls,str):
             jobs=jobs+get_cls(job_path[job_class.index(choose_cls)])
             return render_template('home.html',jobs=jobs,job_class=job_class)
@@ -102,7 +104,7 @@ def index():
                 jobs=jobs+get_cls(job_path[job_class.index(item)])
             return render_template('home.html',jobs=jobs,job_class=job_class)
     else:
-        jobs=[]
+        jobs=get_cls(new_path)
         for item in job_path:
             jobs=jobs+get_cls(item)
         return render_template('home.html',jobs=jobs,job_class=job_class)
@@ -125,10 +127,16 @@ def classify():
 
             f_title = request.form['title']
             f_content = request.form['description']
-
+            f_Webindex = request.form['Webindex']
+            f_Company = request.form['Company']
             predicted_message = "The category of this news is {}.".format(job_clf(f_content))
-            app.logger.info(predicted_message)
-            return render_template('classify.html', predicted_message=predicted_message, title=f_title, description=f_content)
+            
+            x=random.randint(1,1000)
+            save_path='static/data/new/'+str(x)+'.txt'
+            file_handle=open(save_path,mode='w')
+            file_handle.writelines(['Title: '+f_title+'\n','Webindex: '+f_Webindex +'\n','Company: '+f_Company +'\n','Description: '+f_content+'\n'])
+            file_handle.close()
+            return render_template('classify.html', predicted_message=predicted_message, title=f_title, description=f_content,Webindex=f_Webindex,Company=f_Company)
         else:
             return render_template('classify.html')
     else:
